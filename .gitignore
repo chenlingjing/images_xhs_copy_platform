@@ -1,0 +1,52 @@
+# ========== 环境变量与敏感配置 ==========
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# ========== 前端(Node/Vite) ==========
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+.cache/
+
+# ========== 后端 Java ==========
+target/
+.idea/
+*.class
+*.jar
+*.war
+*.ear
+.settings/
+.project
+.classpath
+
+# ========== 后端 Python ==========
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ========== 编辑器与系统文件 ==========
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ========== 日志与临时文件 ==========
+logs/
+*.log
+tmp/
+temp/
+*.tmp
