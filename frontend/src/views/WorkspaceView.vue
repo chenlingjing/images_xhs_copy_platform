@@ -1,12 +1,12 @@
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="max-w-7xl mx-auto">
     <!-- Page header -->
-    <div class="mb-8">
-      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">文案生成工作台</h1>
+    <div class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">文案生成</h1>
       <p class="text-gray-500">上传图片，AI 自动识别内容并生成小红书风格种草文案</p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
       <!-- Left column: input & params -->
       <div class="lg:col-span-5 space-y-6">
         <!-- Image input card -->
@@ -65,7 +65,7 @@
           <EmptyState
             v-if="store.status === 'idle'"
             title="等待生成"
-            description="在左侧上传图片并填写生成参数，点击生成后即可在这里查看小红书风格文案。"
+            description="上传图片并填写生成参数，点击生成后即可在这里查看小红书风格文案。"
           />
 
           <!-- Uploading / Generating -->
@@ -95,13 +95,21 @@
 
     <!-- Recent history -->
     <section
-      v-if="store.history.length > 0"
+      v-if="historyStore.records.length > 0"
       class="mt-10"
     >
-      <h2 class="text-xl font-bold text-gray-900 mb-5">最近生成</h2>
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-xl font-bold text-gray-900">最近生成</h2>
+        <RouterLink
+          to="/workspace/history"
+          class="text-sm text-xhs-red font-medium hover:text-red-700"
+        >
+          查看全部 →
+        </RouterLink>
+      </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <div
-          v-for="record in store.history.slice(0, 6)"
+          v-for="record in historyStore.records.slice(0, 6)"
           :key="record.id"
           class="card p-4 hover:shadow-float transition-shadow cursor-pointer"
           @click="loadHistory(record)"
@@ -138,7 +146,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useGenerationStore } from '@/stores/generation'
+import { useHistoryStore } from '@/stores/history'
 import type { GenerationRecord, ToneStyle } from '@/types'
 import ImageUploader from '@/components/ImageUploader.vue'
 import ParamForm from '@/components/ParamForm.vue'
@@ -148,6 +158,7 @@ import LoadingState from '@/components/LoadingState.vue'
 import ErrorState from '@/components/ErrorState.vue'
 
 const store = useGenerationStore()
+const historyStore = useHistoryStore()
 
 const statusText = computed(() => {
   switch (store.status) {
@@ -169,35 +180,60 @@ const statusBadgeClass = computed(() => {
   }
 })
 
-function onGenerate(payload: { productName: string; targetAudience: string; toneStyle: ToneStyle }) {
+async function onGenerate(payload: { productName: string; targetAudience: string; toneStyle: ToneStyle }) {
   if (!store.currentImageUrl) {
     store.status = 'failed'
     store.errorMessage = '请先上传图片或输入图片链接'
     return
   }
-  store.generate(payload)
+
+  const result = await store.generate(payload)
+
+  const record: GenerationRecord = {
+    id: result ? result.id : `failed-${Date.now()}`,
+    imageUrl: store.currentImageUrl,
+    params: { imageUrl: store.currentImageUrl, ...payload },
+    result,
+    status: result ? 'success' : 'failed',
+    errorMessage: result ? undefined : store.errorMessage,
+    createdAt: new Date().toISOString()
+  }
+
+  // 仅保留最近 100 条
+  historyStore.addRecord(record)
+  if (historyStore.records.length > 100) {
+    historyStore.records = historyStore.records.slice(0, 100)
+    historyStore.saveHistory()
+  }
 }
 
 function onRetry() {
-  // Clear error and let user click generate again
   store.status = 'idle'
   store.errorMessage = ''
 }
 
-function onRegenerate() {
-  // Trigger re-generation with last used params (defaults for now)
-  store.generate({
+async function onRegenerate() {
+  await store.generate({
     productName: '',
     targetAudience: '',
     toneStyle: '活泼'
   })
+
+  const existing = historyStore.records.find(r => r.result?.id === store.result?.id)
+  if (store.result && !existing) {
+    historyStore.addRecord({
+      id: store.result.id,
+      imageUrl: store.currentImageUrl,
+      params: { imageUrl: store.currentImageUrl },
+      result: store.result,
+      status: 'success',
+      createdAt: new Date().toISOString()
+    })
+  }
 }
 
 function loadHistory(record: GenerationRecord) {
-  store.currentImageUrl = record.params.imageUrl
-  store.result = record.result
-  store.status = record.status === 'success' ? 'success' : 'failed'
-  store.errorMessage = record.errorMessage || ''
+  store.restoreRecord(record)
 }
 
 function formatTime(isoString: string) {
