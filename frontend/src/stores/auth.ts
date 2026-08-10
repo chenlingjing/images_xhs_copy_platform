@@ -137,10 +137,44 @@ export const useAuthStore = defineStore('auth', () => {
     persist(newUser)
     return { success: true }
   }
-
-  function logout() {
+function logout() {
     currentUser.value = null
     persist(null)
+  }
+
+  function updateAvatar(avatarUrl: string) {
+    if (!currentUser.value) return
+    currentUser.value.avatar = avatarUrl
+    persist(currentUser.value)
+
+    const users = getStoredUsers()
+    const idx = users.findIndex(u => u.id === currentUser.value!.id)
+    if (idx !== -1) {
+      users[idx].avatar = avatarUrl
+      saveUsers(users)
+    }
+  }
+
+  function changePassword(oldPassword: string, newPassword: string): { success: boolean; message?: string } {
+    if (!currentUser.value) {
+      return { success: false, message: '用户未登录' }
+    }
+
+    if (currentUser.value.password !== oldPassword) {
+      return { success: false, message: '当前密码错误' }
+    }
+
+    currentUser.value.password = newPassword
+    persist(currentUser.value)
+
+    const users = getStoredUsers()
+    const idx = users.findIndex(u => u.id === currentUser.value!.id)
+    if (idx !== -1) {
+      users[idx].password = newPassword
+      saveUsers(users)
+    }
+
+    return { success: true }
   }
 
   // Demo helpers for quick role switching during development
@@ -159,6 +193,8 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     logout,
+    updateAvatar,
+    changePassword,
     updateLastActive,
     setRole
   }

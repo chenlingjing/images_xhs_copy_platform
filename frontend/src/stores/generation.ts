@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import type { GenerationParams, GenerationRecord, GenerationResult, GenerationStatus } from '@/types'
+import type { GenerationParams, GenerationRecord, GenerationResult, GenerationStatus, ToneStyle } from '@/types'
 import { uploadImage, uploadImageFromUrl, generateCopy } from '@/services/mockApi'
 
 export const useGenerationStore = defineStore('generation', () => {
@@ -8,6 +8,11 @@ export const useGenerationStore = defineStore('generation', () => {
   const status = ref<GenerationStatus>('idle')
   const result = ref<GenerationResult | null>(null)
   const errorMessage = ref('')
+  const lastParams = ref<{ productName: string; targetAudience: string; toneStyle: ToneStyle }>({
+    productName: '',
+    targetAudience: '',
+    toneStyle: '活泼'
+  })
 
   const isUploading = computed(() => status.value === 'uploading')
   const isGenerating = computed(() => status.value === 'generating')
@@ -63,6 +68,7 @@ export const useGenerationStore = defineStore('generation', () => {
     status.value = 'generating'
     errorMessage.value = ''
     result.value = null
+    lastParams.value = { ...params }
 
     try {
       const generationResult = await generateCopy({
@@ -85,6 +91,13 @@ export const useGenerationStore = defineStore('generation', () => {
     result.value = record.result
     status.value = record.status === 'success' ? 'success' : 'failed'
     errorMessage.value = record.errorMessage || ''
+    if (record.params) {
+      lastParams.value = {
+        productName: record.params.productName || '',
+        targetAudience: record.params.targetAudience || '',
+        toneStyle: record.params.toneStyle || '活泼'
+      }
+    }
   }
 
   function reset() {
@@ -93,12 +106,12 @@ export const useGenerationStore = defineStore('generation', () => {
     result.value = null
     errorMessage.value = ''
   }
-
-  return {
+return {
     currentImageUrl,
     status,
     result,
     errorMessage,
+    lastParams,
     isUploading,
     isGenerating,
     isBusy,

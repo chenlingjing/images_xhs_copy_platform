@@ -5,6 +5,7 @@ import RegisterView from '@/views/RegisterView.vue'
 import WorkspaceLayout from '@/components/WorkspaceLayout.vue'
 import WorkspaceView from '@/views/WorkspaceView.vue'
 import HistoryView from '@/views/HistoryView.vue'
+import ProfileView from '@/views/ProfileView.vue'
 import AdminOverview from '@/views/admin/AdminOverview.vue'
 import AdminUsers from '@/views/admin/AdminUsers.vue'
 import AdminGenerations from '@/views/admin/AdminGenerations.vue'
@@ -57,6 +58,11 @@ const router = createRouter({
           path: 'history',
           name: 'history',
           component: HistoryView
+        },
+        {
+          path: 'profile',
+          name: 'profile',
+          component: ProfileView
         }
       ]
     },

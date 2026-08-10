@@ -62,26 +62,41 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, watch } from 'vue'
 import type { ToneStyle } from '@/types'
 
 interface Props {
   disabled?: boolean
   isGenerating?: boolean
+  productName?: string
+  targetAudience?: string
+  toneStyle?: ToneStyle
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   disabled: false,
-  isGenerating: false
+  isGenerating: false,
+  productName: '',
+  targetAudience: '',
+  toneStyle: '活泼'
 })
 
 const toneOptions: ToneStyle[] = ['活泼', '温柔', '专业', '搞笑', '治愈']
 
 const form = reactive({
-  productName: '',
-  targetAudience: '',
-  toneStyle: '活泼' as ToneStyle
+  productName: props.productName,
+  targetAudience: props.targetAudience,
+  toneStyle: props.toneStyle
 })
+
+watch(
+  () => [props.productName, props.targetAudience, props.toneStyle],
+  ([productName, targetAudience, toneStyle]) => {
+    form.productName = productName as string
+    form.targetAudience = targetAudience as string
+    form.toneStyle = toneStyle as ToneStyle
+  }
+)
 
 const emit = defineEmits<{
   (e: 'submit', payload: { productName: string; targetAudience: string; toneStyle: ToneStyle }): void

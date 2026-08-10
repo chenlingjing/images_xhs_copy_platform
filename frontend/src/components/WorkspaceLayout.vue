@@ -28,7 +28,7 @@
     <div class="flex flex-1">
       <!-- Desktop sidebar (fixed, follows scroll) -->
       <aside class="hidden lg:flex fixed left-0 top-0 z-30 h-screen w-64 flex-col bg-white border-r border-gray-200 overflow-y-auto">
-        <SidebarContent @logout="handleLogout" />
+        <SidebarContent />
       </aside>
 
       <!-- Mobile drawer -->
@@ -64,7 +64,7 @@
                 </svg>
               </button>
             </div>
-            <SidebarContent @logout="logoutFromDrawer" />
+            <SidebarContent />
           </div>
         </div>
       </Transition>
@@ -79,24 +79,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { useHistoryStore } from '@/stores/history'
 import SidebarContent from './WorkspaceSidebarContent.vue'
 
-const router = useRouter()
-const auth = useAuthStore()
-const historyStore = useHistoryStore()
 const drawerOpen = ref(false)
-
-function handleLogout() {
-  drawerOpen.value = false
-  auth.logout()
-  historyStore.clearHistory()
-  router.push('/login')
-}
-
-function logoutFromDrawer() {
-  handleLogout()
-}
 </script>

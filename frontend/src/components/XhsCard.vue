@@ -1,5 +1,17 @@
 <template>
-  <div class="bg-white rounded-2xl shadow-card overflow-hidden animate-slide-up">
+  <div
+    :class="[
+      'overflow-hidden animate-slide-up',
+      fullHeight ? 'h-full flex flex-col bg-white rounded-2xl shadow-card' : 'bg-white rounded-2xl shadow-card',
+      preview ? 'relative' : ''
+    ]"
+  >
+    <!-- <div
+      v-if="preview"
+      class="absolute top-3 right-3 z-10 px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-medium pointer-events-none"
+    >
+      效果预览
+    </div> -->
     <!-- Card header -->
     <div class="flex items-center justify-between px-5 py-4 border-b border-gray-50">
       <div class="flex items-center gap-3">
@@ -15,12 +27,18 @@
     </div>
 
     <!-- Card body -->
-    <div class="p-5 space-y-4">
+    <div
+      :class="[
+        'p-5 space-y-4',
+        fullHeight ? 'flex-1 overflow-y-auto' : ''
+      ]"
+    >
       <!-- Title -->
       <div class="space-y-1.5">
         <div class="flex items-center justify-between">
           <span class="text-xs font-medium text-gray-400 uppercase tracking-wider">标题</span>
           <CopyButton
+            v-if="!preview"
             :text="result.title"
             label="复制标题"
           />
@@ -35,6 +53,7 @@
         <div class="flex items-center justify-between">
           <span class="text-xs font-medium text-gray-400 uppercase tracking-wider">正文</span>
           <CopyButton
+            v-if="!preview"
             :text="result.content"
             label="复制正文"
           />
@@ -49,6 +68,7 @@
         <div class="flex items-center justify-between">
           <span class="text-xs font-medium text-gray-400 uppercase tracking-wider">话题标签</span>
           <CopyButton
+            v-if="!preview"
             :text="result.tags.join(' ')"
             label="复制标签"
           />
@@ -66,7 +86,10 @@
     </div>
 
     <!-- Card footer -->
-    <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row gap-3">
+    <div
+      v-if="!preview"
+      class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row gap-3"
+    >
       <button
         type="button"
         class="btn-primary flex-1"
@@ -98,9 +121,14 @@ import CopyButton from './CopyButton.vue'
 
 interface Props {
   result: GenerationResult
+  fullHeight?: boolean
+  preview?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  fullHeight: false,
+  preview: false
+})
 
 defineEmits<{
   (e: 'regenerate'): void

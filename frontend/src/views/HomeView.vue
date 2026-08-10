@@ -41,7 +41,7 @@
             </a>
           </div>
 
-          <p class="text-sm text-gray-400">无需信用卡 · 支持 jpg / png / webp</p>
+          <p class="text-sm text-gray-400">无需付费 · 支持 jpg / png / webp</p>
         </div>
       </div>
 
@@ -147,7 +147,10 @@
             </RouterLink>
           </div>
           <div class="lg:pl-8">
-            <XhsCard :result="exampleResult" />
+            <XhsCard
+              :result="exampleResult"
+              preview
+            />
           </div>
         </div>
       </div>
