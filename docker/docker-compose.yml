@@ -1,0 +1,35 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: xhs-mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: xhs_copy_db
+      TZ: Asia/Shanghai
+    volumes:
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - xhs-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: xhs-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    environment:
+      TZ: Asia/Shanghai
+    networks:
+      - xhs-network
+
+volumes:
+  mysql_data:
+
+networks:
+  xhs-network:
+    driver: bridge
