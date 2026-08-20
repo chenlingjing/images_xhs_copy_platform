@@ -211,7 +211,11 @@ const exampleResult = {
   tags: ['#奶茶推荐', '#下午茶', '#治愈系', '#探店', '#生活方式']
 }
 
-const features = [
+const features: Array<{
+  icon: 'upload' | 'sparkles' | 'copy'
+  title: string
+  description: string
+}> = [
   {
     icon: 'upload',
     title: '图片一键上传',

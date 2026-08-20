@@ -5,6 +5,7 @@ import { uploadImage, uploadImageFromUrl, generateCopy } from '@/services/mockAp
 
 export const useGenerationStore = defineStore('generation', () => {
   const currentImageUrl = ref('')
+  const imageSourceType = ref<'local' | 'url'>('local')
   const status = ref<GenerationStatus>('idle')
   const result = ref<GenerationResult | null>(null)
   const errorMessage = ref('')
@@ -27,6 +28,7 @@ export const useGenerationStore = defineStore('generation', () => {
     try {
       const res = await uploadImage(file)
       currentImageUrl.value = res.url
+      imageSourceType.value = 'local'
       status.value = 'idle'
     } catch (err) {
       status.value = 'failed'
@@ -43,6 +45,7 @@ export const useGenerationStore = defineStore('generation', () => {
     try {
       const res = await uploadImageFromUrl(url)
       currentImageUrl.value = res.url
+      imageSourceType.value = 'url'
       status.value = 'idle'
     } catch (err) {
       status.value = 'failed'
@@ -53,6 +56,7 @@ export const useGenerationStore = defineStore('generation', () => {
 
   function clearImage() {
     currentImageUrl.value = ''
+    imageSourceType.value = 'local'
     result.value = null
     status.value = 'idle'
     errorMessage.value = ''
@@ -68,12 +72,18 @@ export const useGenerationStore = defineStore('generation', () => {
     status.value = 'generating'
     errorMessage.value = ''
     result.value = null
-    lastParams.value = { ...params }
+    lastParams.value = {
+      productName: params.productName ?? '',
+      targetAudience: params.targetAudience ?? '',
+      toneStyle: params.toneStyle ?? '活泼'
+    }
 
     try {
       const generationResult = await generateCopy({
         imageUrl: currentImageUrl.value,
-        ...params
+        productName: params.productName ?? '',
+        targetAudience: params.targetAudience ?? '',
+        toneStyle: params.toneStyle ?? '活泼'
       })
 
       result.value = generationResult
@@ -88,6 +98,7 @@ export const useGenerationStore = defineStore('generation', () => {
 
   function restoreRecord(record: GenerationRecord) {
     currentImageUrl.value = record.imageUrl
+    imageSourceType.value = /\/uploads\//i.test(record.imageUrl) ? 'local' : 'url'
     result.value = record.result
     status.value = record.status === 'success' ? 'success' : 'failed'
     errorMessage.value = record.errorMessage || ''
@@ -102,12 +113,15 @@ export const useGenerationStore = defineStore('generation', () => {
 
   function reset() {
     currentImageUrl.value = ''
+    imageSourceType.value = 'local'
     status.value = 'idle'
     result.value = null
     errorMessage.value = ''
   }
-return {
+
+  return {
     currentImageUrl,
+    imageSourceType,
     status,
     result,
     errorMessage,

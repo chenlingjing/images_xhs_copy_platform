@@ -1,4 +1,5 @@
 import json
+import re
 
 import httpx
 
@@ -38,26 +39,29 @@ class LLMService:
 
         payload = {
             "model": self.model,
-            "input": {
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": system_prompt,
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {"image": f"data:image/png;base64,{image_base64}"},
-                            {"text": user_prompt},
-                        ],
-                    }
-                ]
-            },
-            "parameters": {
-                "result_format": "message",
-                "temperature": 0.7,
-                "max_tokens": 1000,
-            },
+            "messages": [
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": user_prompt,
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{image_base64}",
+                            },
+                        },
+                    ],
+                },
+            ],
+            "temperature": 0.7,
+            "max_tokens": 1000,
         }
 
         headers = {
@@ -68,7 +72,7 @@ class LLMService:
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 resp = await client.post(
-                    f"{self.base_url}/services/aigc/text2image/text-generation",
+                    f"{self.base_url}/chat/completions",
                     headers=headers,
                     json=payload,
                 )
@@ -93,33 +97,57 @@ class LLMService:
 
     def _parse_response(self, response_data: dict) -> dict:
         try:
-            output = response_data.get("output", {})
-            choices = output.get("choices", [])
+            choices = response_data.get("choices")
+            if not choices:
+                output = response_data.get("output", {})
+                choices = output.get("choices", [])
+
             if not choices:
                 raise LLMParseException("大模型响应中没有 choices 字段")
+
             message = choices[0].get("message", {})
             content = message.get("content", "")
+
             if isinstance(content, list):
-                content = content[0].get("text", "") if content else ""
+                text_parts = []
+                for item in content:
+                    if isinstance(item, dict):
+                        if item.get("type") in {"text", "output_text"}:
+                            text_parts.append(str(item.get("text", "")))
+                        elif "text" in item:
+                            text_parts.append(str(item.get("text", "")))
+                content = "".join(text_parts)
             elif isinstance(content, dict):
                 content = content.get("text", "")
             elif not isinstance(content, str):
                 content = str(content)
 
-            content = content.strip()
+            content = (content or "").strip()
+            if not content:
+                raise LLMParseException("大模型响应中没有正文内容")
 
             if content.startswith("```"):
-                content = content.strip("```json").strip("```").strip()
+                content = re.sub(r"^```(?:json)?\s*", "", content, flags=re.IGNORECASE | re.DOTALL)
+                content = re.sub(r"\s*```$", "", content, flags=re.DOTALL)
 
-            try:
-                result = json.loads(content)
-                return self._validate_result(result)
-            except json.JSONDecodeError:
-                return {
-                    "title": "",
-                    "content": content,
-                    "tags": [],
-                }
+            candidate_texts = [content]
+            match = re.search(r"\{.*\}", content, flags=re.DOTALL)
+            if match:
+                candidate_texts.insert(0, match.group(0))
+
+            for candidate in candidate_texts:
+                try:
+                    result = json.loads(candidate)
+                    if isinstance(result, dict):
+                        return self._validate_result(result)
+                except json.JSONDecodeError:
+                    continue
+
+            return {
+                "title": "",
+                "content": content,
+                "tags": [],
+            }
         except LLMParseException:
             raise
         except Exception as e:
