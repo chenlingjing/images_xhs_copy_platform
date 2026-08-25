@@ -76,24 +76,24 @@ class LLMService:
                     headers=headers,
                     json=payload,
                 )
-        except httpx.ConnectError as e:
-            raise LLMCallException(f"大模型 API 连接失败：{str(e)}")
+        except httpx.ConnectError:
+            raise LLMCallException("无法连接大模型服务")
         except httpx.TimeoutException:
             raise LLMCallException("大模型 API 请求超时")
-        except Exception as e:
-            raise LLMCallException(f"大模型 API 调用异常：{str(e)}")
+        except Exception:
+            raise LLMCallException("大模型 API 调用异常")
 
         if resp.status_code != 200:
             raise LLMCallException(
-                f"大模型 API 返回错误（HTTP {resp.status_code}）：{resp.text}"
+                f"大模型 API 返回错误（HTTP {resp.status_code}）"
             )
 
         try:
             return self._parse_response(resp.json())
         except LLMParseException:
             raise
-        except Exception as e:
-            raise LLMParseException(f"大模型响应解析异常：{str(e)}")
+        except Exception:
+            raise LLMParseException("大模型响应解析异常")
 
     def _parse_response(self, response_data: dict) -> dict:
         try:
@@ -150,8 +150,8 @@ class LLMService:
             }
         except LLMParseException:
             raise
-        except Exception as e:
-            raise LLMParseException(f"大模型响应解析异常：{str(e)}")
+        except Exception:
+            raise LLMParseException("大模型响应解析异常")
 
     def _validate_result(self, result: dict) -> dict:
         title = str(result.get("title", ""))[:50]

@@ -13,25 +13,21 @@
           <StatCard
             label="用户总数"
             :value="overview.totalUsers"
-            :trend="12"
             type="users"
           />
           <StatCard
             label="累计生成次数"
             :value="overview.totalGenerations"
-            :trend="8"
             type="generations"
           />
           <StatCard
             label="今日生成"
             :value="overview.todayGenerations"
-            :trend="-3"
             type="today"
           />
           <StatCard
             label="生成成功率"
             :value="`${overview.successRate}%`"
-            :trend="2"
             type="success"
           />
         </div>

@@ -69,8 +69,8 @@ async def validate_image_url(image_url: str) -> dict:
                     raise ImageUrlException(f"图片大小超过限制（最大 {MAX_IMAGE_SIZE // 1024 // 1024}MB）")
     except ImageUrlException:
         raise
-    except Exception as e:
-        raise ImageUrlException(f"图片URL校验失败：{str(e)}")
+    except Exception:
+        raise ImageUrlException("图片URL校验失败")
 
     return {
         "valid": True,

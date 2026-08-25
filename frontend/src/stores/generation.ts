@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import type { GenerationParams, GenerationRecord, GenerationResult, GenerationStatus, ToneStyle } from '@/types'
-import { uploadImage, uploadImageFromUrl, generateCopy } from '@/services/mockApi'
+import { uploadImage, uploadImageFromUrl, generateCopy } from '@/services/generationApi'
 
 export const useGenerationStore = defineStore('generation', () => {
   const currentImageUrl = ref('')

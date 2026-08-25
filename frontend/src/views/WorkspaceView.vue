@@ -199,24 +199,8 @@ async function onGenerate(payload: { productName: string; targetAudience: string
     return
   }
 
-  const result = await store.generate(payload)
-
-  const record: GenerationRecord = {
-    id: result ? result.id : `failed-${Date.now()}`,
-    imageUrl: store.currentImageUrl,
-    params: { imageUrl: store.currentImageUrl, ...payload },
-    result,
-    status: result ? 'success' : 'failed',
-    errorMessage: result ? undefined : store.errorMessage,
-    createdAt: new Date().toISOString()
-  }
-
-  // 仅保留最近 100 条
-  historyStore.addRecord(record)
-  if (historyStore.records.length > 100) {
-    historyStore.records = historyStore.records.slice(0, 100)
-    historyStore.saveHistory()
-  }
+  await store.generate(payload)
+  await historyStore.loadHistory()
 }
 
 function onRetry() {
@@ -230,18 +214,7 @@ async function onRegenerate() {
     targetAudience: '',
     toneStyle: '活泼'
   })
-
-  const existing = historyStore.records.find(r => r.result?.id === store.result?.id)
-  if (store.result && !existing) {
-    historyStore.addRecord({
-      id: store.result.id,
-      imageUrl: store.currentImageUrl,
-      params: { imageUrl: store.currentImageUrl },
-      result: store.result,
-      status: 'success',
-      createdAt: new Date().toISOString()
-    })
-  }
+  await historyStore.loadHistory()
 }
 function loadHistory(record: GenerationRecord) {
   store.restoreRecord(record)

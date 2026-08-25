@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     QWEN_MODEL: str = "qwen-vl-plus"
     QWEN_BASE_URL: str = "https://dashscope.aliyuncs.com/api/v1"
 
+    SESSION_EXPIRE_DAYS: int = 7
+    INITIAL_ADMIN_USERNAME: str = ""
+    INITIAL_ADMIN_EMAIL: str = ""
+    INITIAL_ADMIN_PASSWORD: str = ""
+
     BACKEND_PORT: int = 8080
     FRONTEND_PORT: int = 5173
 

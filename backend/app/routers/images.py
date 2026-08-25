@@ -1,10 +1,15 @@
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, Depends, UploadFile
 
+from ..dependencies.auth import get_current_user
 from ..schemas.common import ApiResponse
 from ..services.image_service import MAX_IMAGE_SIZE, save_image, validate_image_url
 from ..utils.exceptions import ImageUploadException
 
-router = APIRouter(prefix="/images", tags=["图片管理"])
+router = APIRouter(
+    prefix="/images",
+    tags=["图片管理"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @router.post("/upload", response_model=ApiResponse, response_model_by_alias=True)
