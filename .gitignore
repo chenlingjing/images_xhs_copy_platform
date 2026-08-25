@@ -50,3 +50,7 @@ logs/
 tmp/
 temp/
 *.tmp
+
+# ========== 运行时上传文件 ==========
+backend/uploads/*
+!backend/uploads/.gitkeep

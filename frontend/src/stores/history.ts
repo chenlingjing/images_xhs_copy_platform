@@ -1,15 +1,16 @@
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { GenerationRecord } from '@/types'
+import {
+  deleteGenerationRecord,
+  getGenerationRecords
+} from '@/services/generationApi'
 import { useAuthStore } from './auth'
-
-function getStorageKey(userId: string) {
-  return `xhs_history_${userId}`
-}
 
 export const useHistoryStore = defineStore('history', () => {
   const auth = useAuthStore()
   const records = ref<GenerationRecord[]>([])
+  const loading = ref(false)
 
   const isEmpty = computed(() => records.value.length === 0)
   const sortedRecords = computed(() => {
@@ -18,52 +19,41 @@ export const useHistoryStore = defineStore('history', () => {
     )
   })
 
-  function loadHistory(userId?: string) {
-    const id = userId || auth.currentUser?.id
-    if (!id) {
+  async function loadHistory() {
+    if (!auth.isLoggedIn) {
       records.value = []
       return
     }
+    loading.value = true
     try {
-      const saved = localStorage.getItem(getStorageKey(id))
-      records.value = saved ? JSON.parse(saved) : []
+      records.value = await getGenerationRecords()
     } catch {
       records.value = []
+    } finally {
+      loading.value = false
     }
-  }
-
-  function saveHistory(userId?: string) {
-    const id = userId || auth.currentUser?.id
-    if (!id) return
-    localStorage.setItem(getStorageKey(id), JSON.stringify(records.value))
   }
 
   function clearHistory() {
     records.value = []
   }
 
-  function addRecord(record: GenerationRecord, userId?: string) {
-    records.value.unshift(record)
-    saveHistory(userId)
-  }
-
-  function deleteRecord(id: string, userId?: string) {
-    records.value = records.value.filter(r => r.id !== id)
-    saveHistory(userId)
+  async function deleteRecord(id: string) {
+    await deleteGenerationRecord(id)
+    records.value = records.value.filter(record => record.id !== id)
   }
 
   function findById(id: string) {
-    return records.value.find(r => r.id === id)
+    return records.value.find(record => record.id === id)
   }
 
   return {
     records,
+    loading,
     isEmpty,
     sortedRecords,
     loadHistory,
-    saveHistory,
     clearHistory,
-    addRecord,
     deleteRecord,
     findById
   }

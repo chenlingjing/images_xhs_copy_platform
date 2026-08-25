@@ -1,9 +1,11 @@
-from pydantic_settings import BaseSettings
+import os
 from pathlib import Path
+
+from pydantic_settings import BaseSettings
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
+PROJECT_ROOT = BASE_DIR.parent
 UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
@@ -23,17 +25,45 @@ class Settings(BaseSettings):
     QWEN_MODEL: str = "qwen-vl-plus"
     QWEN_BASE_URL: str = "https://dashscope.aliyuncs.com/api/v1"
 
+    SESSION_EXPIRE_DAYS: int = 7
+    INITIAL_ADMIN_USERNAME: str = ""
+    INITIAL_ADMIN_EMAIL: str = ""
+    INITIAL_ADMIN_PASSWORD: str = ""
+
     BACKEND_PORT: int = 8080
     FRONTEND_PORT: int = 5173
 
     CORS_ORIGINS: list[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+        "http://localhost:5175",
+        "http://127.0.0.1:5175",
     ]
 
     class Config:
-        env_file = str(BASE_DIR / ".env")
+        env_file = str(PROJECT_ROOT / ".env")
         env_file_encoding = "utf-8"
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls,
+        init_settings,
+        env_settings,
+        dotenv_settings,
+        file_secret_settings,
+    ):
+        return (
+            init_settings,
+            env_settings,
+            dotenv_settings,
+            lambda **kwargs: {
+                "QWEN_API_KEY": os.getenv("QWEN_API_KEY") or os.getenv("DASHSCOPE_API_KEY") or ""
+            },
+            file_secret_settings,
+        )
 
     @property
     def mysql_dsn(self) -> str:

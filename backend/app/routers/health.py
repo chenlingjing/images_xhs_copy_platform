@@ -20,15 +20,15 @@ async def health_check() -> ApiResponse:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         result["services"]["mysql"] = "ok"
-    except Exception as e:
-        result["services"]["mysql"] = f"error: {str(e)}"
+    except Exception:
+        result["services"]["mysql"] = "error"
         result["status"] = "degraded"
 
     try:
         await redis_client.ping()
         result["services"]["redis"] = "ok"
-    except Exception as e:
-        result["services"]["redis"] = f"error: {str(e)}"
+    except Exception:
+        result["services"]["redis"] = "error"
         result["status"] = "degraded"
 
     return ApiResponse(data=result)

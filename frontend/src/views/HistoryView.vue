@@ -211,9 +211,13 @@ async function copyFull(record: GenerationRecord) {
   }
 }
 
-function remove(id: string) {
+async function remove(id: string) {
   if (!confirm('确定要删除这条历史记录吗？')) return
-  historyStore.deleteRecord(id)
+  try {
+    await historyStore.deleteRecord(id)
+  } catch (error) {
+    alert(error instanceof Error ? error.message : '删除失败')
+  }
 }
 
 function formatTime(isoString: string) {

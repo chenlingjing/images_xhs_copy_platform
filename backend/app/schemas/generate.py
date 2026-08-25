@@ -46,6 +46,7 @@ class GenerateRecordResponse(BaseModel):
     )
 
     id: int
+    user_id: int | None = None
     image_type: int
     image_url: str
     product_name: str
@@ -54,6 +55,9 @@ class GenerateRecordResponse(BaseModel):
     title: str
     content: str
     tags: list[str] = Field(default_factory=list)
+    status: Literal["pending", "success", "failed"]
+    error_message: str = ""
+    duration_ms: int = 0
     create_time: datetime
     update_time: datetime
 

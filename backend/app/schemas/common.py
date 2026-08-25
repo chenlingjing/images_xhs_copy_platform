@@ -1,4 +1,4 @@
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
@@ -17,7 +17,7 @@ class ApiResponse(BaseModel, Generic[T]):
 
     code: int = 200
     message: str = "success"
-    data: T | None = None
+    data: Optional[T] = None
 
 
 class PageResponse(BaseModel, Generic[T]):

@@ -116,7 +116,7 @@ const form = reactive({
 const loading = ref(false)
 const error = ref('')
 
-function handleRegister() {
+async function handleRegister() {
   error.value = ''
 
   if (form.password !== form.confirmPassword) {
@@ -129,21 +129,19 @@ function handleRegister() {
   }
 
   loading.value = true
-  const res = auth.register({
+  const res = await auth.register({
     username: form.username.trim(),
     email: form.email.trim(),
     password: form.password
   })
 
-  setTimeout(() => {
-    loading.value = false
-    if (!res.success) {
-      error.value = res.message || '注册失败'
-      return
-    }
+  loading.value = false
+  if (!res.success) {
+    error.value = res.message || '注册失败'
+    return
+  }
 
-    historyStore.loadHistory()
-    router.push('/workspace')
-  }, 600)
+  await historyStore.loadHistory()
+  router.push('/workspace')
 }
 </script>

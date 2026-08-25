@@ -70,12 +70,6 @@
               立即注册
             </RouterLink>
           </div>
-
-          <div class="mt-6 p-4 rounded-xl bg-gray-50 text-xs text-gray-500 space-y-1">
-            <p class="font-medium text-gray-700">演示账号：</p>
-            <p>普通用户：demo / demo123</p>
-            <p>管理员：admin / admin123</p>
-          </div>
         </div>
       </div>
     </div>
@@ -101,26 +95,23 @@ const form = reactive({
 const loading = ref(false)
 const error = ref('')
 
-function handleLogin() {
+async function handleLogin() {
   error.value = ''
   loading.value = true
 
-  const res = auth.login({
+  const res = await auth.login({
     account: form.account.trim(),
     password: form.password
   })
 
-  // Simulate network delay
-  setTimeout(() => {
-    loading.value = false
-    if (!res.success) {
-      error.value = res.message || '登录失败'
-      return
-    }
+  loading.value = false
+  if (!res.success) {
+    error.value = res.message || '登录失败'
+    return
+  }
 
-    historyStore.loadHistory()
-    const redirect = route.query.redirect as string | undefined
-    router.push(redirect || '/workspace')
-  }, 600)
+  await historyStore.loadHistory()
+  const redirect = route.query.redirect as string | undefined
+  router.push(redirect || '/workspace')
 }
 </script>

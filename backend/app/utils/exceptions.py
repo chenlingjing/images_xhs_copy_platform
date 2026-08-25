@@ -33,3 +33,13 @@ class DatabaseException(AppException):
 class ConfigException(AppException):
     def __init__(self, message: str = "配置错误"):
         super().__init__(code=500, message=message)
+
+
+class AuthenticationException(AppException):
+    def __init__(self, message: str = "请先登录"):
+        super().__init__(code=401, message=message)
+
+
+class PermissionDeniedException(AppException):
+    def __init__(self, message: str = "没有权限执行此操作"):
+        super().__init__(code=403, message=message)

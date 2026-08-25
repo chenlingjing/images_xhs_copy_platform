@@ -49,6 +49,12 @@
             >
               修改头像
             </button>
+            <p
+              v-if="avatarError"
+              class="max-w-48 text-center text-xs text-red-600"
+            >
+              {{ avatarError }}
+            </p>
           </div>
 
           <div class="flex-1 w-full">
@@ -160,6 +166,7 @@ import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useHistoryStore } from '@/stores/history'
+import { uploadImage } from '@/services/generationApi'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -167,6 +174,7 @@ const historyStore = useHistoryStore()
 
 const avatarInput = ref<HTMLInputElement | null>(null)
 const avatarLoading = ref(false)
+const avatarError = ref('')
 
 const passwordForm = reactive({
   oldPassword: '',
@@ -183,26 +191,26 @@ const canSubmitPassword = computed(() =>
   passwordForm.newPassword === passwordForm.confirmPassword
 )
 
-function handleAvatarChange(event: Event) {
+async function handleAvatarChange(event: Event) {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (!file) return
 
   avatarLoading.value = true
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    const dataUrl = e.target?.result as string
-    if (dataUrl) {
-      auth.updateAvatar(dataUrl)
+  avatarError.value = ''
+  try {
+    const uploaded = await uploadImage(file)
+    await auth.updateAvatar(uploaded.url)
+  } catch (error) {
+    avatarError.value = error instanceof Error ? error.message : '头像上传失败'
+  } finally {
+    avatarLoading.value = false
+    if (avatarInput.value) {
+      avatarInput.value.value = ''
     }
-    avatarLoading.value = false
   }
-  reader.onerror = () => {
-    avatarLoading.value = false
-  }
-  reader.readAsDataURL(file)
 }
 
-function handlePasswordSubmit() {
+async function handlePasswordSubmit() {
   passwordMessage.value = ''
 
   if (passwordForm.newPassword.length < 6) {
@@ -217,7 +225,7 @@ function handlePasswordSubmit() {
     return
   }
 
-  const result = auth.changePassword(passwordForm.oldPassword, passwordForm.newPassword)
+  const result = await auth.changePassword(passwordForm.oldPassword, passwordForm.newPassword)
   if (result.success) {
     passwordMessage.value = '密码修改成功'
     passwordSuccess.value = true
@@ -230,8 +238,8 @@ function handlePasswordSubmit() {
   }
 }
 
-function handleLogout() {
-  auth.logout()
+async function handleLogout() {
+  await auth.logout()
   historyStore.clearHistory()
   router.push('/login')
 }

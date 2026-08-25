@@ -304,19 +304,19 @@ function isActive(path: string) {
   return route.hash === `#${hash}`
 }
 
-function logout() {
-  auth.logout()
+async function logout() {
+  await auth.logout()
   historyStore.clearHistory()
   router.push('/')
 }
 
-function logoutMenu() {
+async function logoutMenu() {
   userMenuOpen.value = false
-  logout()
+  await logout()
 }
 
-function logoutMobile() {
+async function logoutMobile() {
   mobileMenuOpen.value = false
-  logout()
+  await logout()
 }
 </script>
